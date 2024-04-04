@@ -33,6 +33,11 @@ namespace LegacyCode
             std::strcpy(buffer_, p.buffer_);
         }
 
+        Paragraph(Paragraph&& p) noexcept
+            : buffer_(std::exchange(p.buffer_, nullptr))
+        {
+        }
+
         Paragraph(const char* txt)
             : buffer_(new char[1024])
         {
@@ -43,6 +48,17 @@ namespace LegacyCode
         {
             Paragraph temp(p);
             swap(temp);
+
+            return *this;
+        }
+
+        
+        Paragraph& operator=(Paragraph&& p)
+        {
+            if (this != &p)
+            {
+                p = std::exchange(p.buffer_, nullptr);
+            }
 
             return *this;
         }
