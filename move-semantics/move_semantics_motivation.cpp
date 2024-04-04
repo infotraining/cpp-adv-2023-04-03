@@ -1,4 +1,5 @@
-#define ENABLE_MOVE
+#define ENABLE_MOVE_SEMANTICS
+#define ENABLE_LOGGING_TO_CONSOLE
 #include "helpers.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -13,15 +14,29 @@ Helpers::Vector create_and_fill()
 
     Vector vec;
 
-    String str = "very, very, very, very, very, very, very, very, very, very, very, very, very, very, very, very long text";
+    String str = "#";
 
     vec.push_back(str);
 
+    std::cout << "--------------\n";
+
     vec.push_back(str + str); 
 
-    vec.push_back("text"); 
+    std::cout << "--------------\n";
 
-    vec.push_back(str);  
+    vec.push_back("text1"); 
+
+    std::cout << "--------------\n";
+    
+    vec.push_back("text2"); 
+
+    std::cout << "--------------\n";
+    
+    vec.push_back("text3"); 
+
+    std::cout << "--------------\n";
+
+    vec.push_back(std::move(str));  
 
     return vec;
 }

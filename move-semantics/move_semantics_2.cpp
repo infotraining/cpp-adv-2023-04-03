@@ -15,14 +15,14 @@ namespace Explain
     class unique_ptr
     {
     public:
-        unique_ptr()
+        unique_ptr() noexcept
             : ptr_{nullptr}
         { }
 
-        unique_ptr(nullptr_t) : ptr_{nullptr}
+        unique_ptr(nullptr_t) noexcept : ptr_{nullptr}
         { } 
 
-        explicit unique_ptr(T* ptr)
+        explicit unique_ptr(T* ptr) noexcept
             : ptr_{ptr}
         { }
 
@@ -37,12 +37,12 @@ namespace Explain
         // }
 
         // move constructor
-        unique_ptr(unique_ptr&& other)
+        unique_ptr(unique_ptr&& other) noexcept
             : ptr_{std::exchange(other.ptr_, nullptr)}
         { }
 
         // move assignment operator
-        unique_ptr& operator=(unique_ptr&& other)
+        unique_ptr& operator=(unique_ptr&& other) noexcept
         {
             if (this != &other)
             {
@@ -56,27 +56,27 @@ namespace Explain
             return *this;
         }
 
-        ~unique_ptr()
+        ~unique_ptr() noexcept
         {
             delete ptr_;
         }
 
-        explicit operator bool() const // conversion from unique_ptr<T> to bool
+        explicit operator bool() const noexcept // conversion from unique_ptr<T> to bool
         {
             return ptr_ != nullptr;
         }
 
-        T& operator*() const
+        T& operator*() const noexcept
         {
             return *ptr_;
         }
 
-        T* operator->() const
+        T* operator->() const noexcept
         {
             return ptr_;
         }
 
-        T* get() const
+        T* get() const noexcept
         {
             return ptr_;
         }

@@ -48,7 +48,7 @@ public:
         return *this;
     }
 
-    Data(Data&& other)
+    Data(Data&& other) noexcept
         : name_{std::move(other.name_)}
         , data_{std::exchange(other.data_, nullptr)}
         , size_{std::exchange(other.size_, 0)}
@@ -56,7 +56,7 @@ public:
         std::cout << "Data(" << name_ << ": mv)\n";
     }
 
-    Data& operator=(Data&& other)
+    Data& operator=(Data&& other) noexcept
     {
         if (this != &other)
         {
@@ -74,29 +74,29 @@ public:
         delete[] data_;
     }
 
-    void swap(Data& other)
+    void swap(Data& other) noexcept
     {
         name_.swap(other.name_);
         std::swap(data_, other.data_);
         std::swap(size_, other.size_);
     }
 
-    iterator begin()
+    iterator begin() noexcept
     {
         return data_;
     }
 
-    iterator end()
+    iterator end() noexcept
     {
         return data_ + size_;
     }
 
-    const_iterator begin() const
+    const_iterator begin() const noexcept
     {
         return data_;
     }
 
-    const_iterator end() const
+    const_iterator end() const noexcept
     {
         return data_ + size_;
     }
@@ -181,15 +181,48 @@ struct Container
     {
         std::copy(lst.begin(), lst.end(), items.begin());
     }
+
+    void push_back(const std::string& item)
+    {
+        std::cout << "void push_back(const std::string& item: " << item << ")\n";
+        items.push_back(item); // copy
+    }
+
+    void push_back(std::string&& item)  // item is lvalue of type: reference to r-value
+    {
+        std::cout << "void push_back(std::string&& item: " << item << ")\n";
+        items.push_back(std::move(item)); // copy
+    }
+
+    void push_back_by_value(std::string item)
+    {
+        std::cout << "void push_back(const std::string& item: " << item << ")\n";
+        items.push_back(std::move(item)); // copy
+    }
 };
 
-TEST_CASE("initializer list")
+TEST_CASE("container")
 {
-    Container c1(42);
-    CHECK(c1.items.size() == 42);
+    SECTION("constructor with initializer list")
+    {
+        Container c1(42);
+        CHECK(c1.items.size() == 42);
 
-    Container c2 = {"one"s, "two"s, "three"s};
-    CHECK(c2.items == std::vector{"one"s, "two"s, "three"s});
+        Container c2 = {"one"s, "two"s, "three"s};
+        CHECK(c2.items == std::vector{"one"s, "two"s, "three"s});
+    }
+
+    SECTION("push_back")
+    {
+        Container container = {"one"s, "two"s, "three"s};
+        container.push_back("text");
+        container.push_back(std::string("text"));
+        container.push_back("text"s);
+
+        std::string str = "hello";
+        container.push_back(str);
+        container.push_back_by_value(str);
+    }
 }
 
 struct HyperGadget
@@ -222,4 +255,18 @@ TEST_CASE("HyperGadget")
     std::cout << "------\n";
 
     HyperGadget target_h = std::move(hg);
+}
+
+void foo()
+{}
+
+void bar() noexcept
+{}
+
+TEST_CASE("noexcept is part of type system - since C++17")
+{
+    void (*ptr_fun)() noexcept = nullptr;
+
+    ptr_fun = bar;
+    //ptr_fun = foo;
 }
