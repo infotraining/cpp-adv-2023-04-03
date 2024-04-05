@@ -215,9 +215,192 @@ TEMPLATE_TEST_CASE("find_if", "[algorithm]", (std::vector<int>))
     }
 }
 
+template <typename T, typename TContainer = std::vector<T>>
+class Container
+{
+    TContainer items;
+
+public:
+    using iterator = typename TContainer::iterator;
+    using const_iterator = typename TContainer::const_iterator;
+
+    Container(size_t size = 0)
+        : items(size)
+    { }
+
+    Container(std::initializer_list<T> lst)
+        : items(lst.size())
+    {
+        std::copy(lst.begin(), lst.end(), items.begin());
+    }
+
+    template <typename U>
+    void push_back(U&& item)
+    {
+        items.push_back(std::forward<U>(item)); // copy
+    }
+
+    template <typename... TArgs>
+    void emplace_back(TArgs&&... args)
+    {
+        items.emplace_back(std::forward<TArgs>(args)...);
+    }
+
+    void push_back_by_value(T item)
+    {
+        std::cout << "void push_back(const std::string& item: " << item << ")\n";
+        items.push_back(std::move(item)); // copy
+    }
+
+    iterator begin()
+    {
+        return items.begin();
+    }
+
+    iterator end()
+    {
+        return items.end();
+    }
+
+    const_iterator begin() const
+    {
+        return items.begin();
+    }
+
+    const_iterator end() const
+    {
+        return items.end();
+    }
+};
+
+namespace TemplateTemplateParam
+{
+    template <typename T, template<typename, typename> class TContainer = std::vector>
+    class Container
+    {
+        TContainer<T, std::allocator<T>> items;
+
+    public:
+        using iterator = typename TContainer<T, std::allocator<T>>::iterator;
+        using const_iterator = typename TContainer<T, std::allocator<T>>::const_iterator;
+
+        Container(size_t size = 0)
+            : items(size)
+        { }
+
+        Container(std::initializer_list<T> lst)
+            : items(lst.size())
+        {
+            std::copy(lst.begin(), lst.end(), items.begin());
+        }
+
+        template <typename U>
+        void push_back(U&& item)
+        {
+            items.push_back(std::forward<U>(item)); // copy
+        }
+
+        template <typename... TArgs>
+        void emplace_back(TArgs&&... args)
+        {
+            items.emplace_back(std::forward<TArgs>(args)...);
+        }
+
+        void push_back_by_value(T item)
+        {
+            std::cout << "void push_back(const std::string& item: " << item << ")\n";
+            items.push_back(std::move(item)); // copy
+        }
+
+        iterator begin()
+        {
+            return items.begin();
+        }
+
+        iterator end()
+        {
+            return items.end();
+        }
+
+        const_iterator begin() const
+        {
+            return items.begin();
+        }
+
+        const_iterator end() const
+        {
+            return items.end();
+        }
+    };
+} // namespace TemplateTemplateParam
+
+template <typename T, size_t N>
+struct Array
+{
+    T items[N];
+
+    using iterator = T*;
+    using const_iterator = const T*;
+
+    size_t size() const
+    {
+        return N;
+    }
+
+    iterator begin()
+    {
+        return &items[0];
+    }
+
+    iterator end()
+    {
+        return begin() + N;
+    }
+
+    const_iterator begin() const
+    {
+        return &items[0];
+    }
+
+    const_iterator end() const
+    {
+        return begin() + N;
+    }
+
+    T& operator[](size_t index)
+    {
+        return items[index];
+    }
+
+    const T& operator[](size_t index) const
+    {
+        return items[index];
+    }
+};
+
 TEST_CASE("class templates")
 {
-    // TODO
+    TemplateTemplateParam::Container<std::string, std::list> container;
+
+    container.push_back("text");
+    container.emplace_back(10, '*');
+
+    std::string text = "text";
+    container.push_back(text);
+
+    for (const auto& item : container)
+    {
+        std::cout << item << "\n";
+    }
+
+    std::cout << "--------------\n";
+
+    Array<int, 10> arr = {1, 2, 3, 4};
+    CHECK(arr.size() == 10);
+    for (const auto& item : arr)
+    {
+        std::cout << item << "\n";
+    }
 }
 
 TEST_CASE("template aliases")
@@ -232,8 +415,7 @@ TEST_CASE("template variables")
 
 TEST_CASE("lambdas")
 {
-    auto lambda = [](int a) { return a * a; };
-
-
-    
+    auto lambda = [](int a) {
+        return a * a;
+    };
 }
