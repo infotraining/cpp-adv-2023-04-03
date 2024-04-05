@@ -275,7 +275,7 @@ public:
 
 namespace TemplateTemplateParam
 {
-    template <typename T, template<typename, typename> class TContainer = std::vector>
+    template <typename T, template <typename, typename> class TContainer = std::vector>
     class Container
     {
         TContainer<T, std::allocator<T>> items;
@@ -403,19 +403,172 @@ TEST_CASE("class templates")
     }
 }
 
-TEST_CASE("template aliases")
-{
-    // TODO
-}
+constexpr double my_pi_d = 3.141592653589793238462643383279502884197;
+constexpr float my_pi_f = 3.141592653589793238462643383279502884197;
+
+template <typename T>
+constexpr T my_pi(3.141592653589793238462643383279502884197);
 
 TEST_CASE("template variables")
 {
-    // TODO
+    std::cout << my_pi<double> << "\n";
+    std::cout << my_pi<float> << "\n";
 }
 
-TEST_CASE("lambdas")
+template <typename T>
+struct ID
 {
-    auto lambda = [](int a) {
-        return a * a;
+    const T value;
+
+    ID(T value)
+        : value{std::move(value)}
+    { }
+
+    // rule of five
+    ID(const ID&) = default;
+    ID& operator=(const ID&) = default;
+    ID(ID&&) = delete;
+    ID& operator=(ID&&) = delete;
+    virtual ~ID() = default;
+
+    const T& id() const
+    {
+        return value;
+    }
+
+    virtual void print() const
+    {
+        std::cout << "ID: " << value << "n";
+    }
+};
+
+template <typename T>
+struct SuperID : ID<T>
+{
+    using TBase = ID<T>;
+
+    using TBase::TBase;
+
+    void print() const override
+    {
+        std::cout << "SuperID: " << TBase::id() << "n";
+    }
+};
+
+template <typename T>
+struct Person : ID<T>
+{
+    std::string name;
+
+    Person(T id, std::string name)
+        : ID<T>{std::move(id)}
+        , name{std::move(name)}
+    { }
+};
+
+TEST_CASE("template & inheritance")
+{
+    Person<std::string> p1{"K4732", "Kowalski"};
+    CHECK(p1.id() == "K4732");
+}
+
+class SuperGadget : public Gadget
+{
+public:
+    // SuperGadget() = default;
+
+    // SuperGadget(int id, const std::string& name = "unknown")
+    //     : Gadget{id, name}
+    // {
+    // }
+
+    using Gadget::Gadget; // constructor inheritance
+
+    void super_use() const
+    {
+        std::cout << "SuperUsing: " << id() << " - " << name() << "\n";
+    }
+};
+
+TEST_CASE("inheriting constructors")
+{
+    SuperGadget sg1;
+
+    SuperGadget sg2{42, "ipad"};
+    sg2.super_use();
+}
+
+///////////////////////////////////////////////////////////////////
+// type dependent name
+
+struct A
+{
+    static auto foo(int x) -> int // static method
+    {
+        return x;
+    }
+
+    struct bar // inner type
+    {
+        int value;
+
+        bar(int v)
+            : value{v}
+        {
+        }
     };
+};
+
+template <typename T>
+void type_dependent_name()
+{
+    auto value1 = T::foo(42);
+    auto value2 = typename T::bar(42);
+}
+
+namespace Ver_1
+{
+    template <typename T>
+    typename T::value_type sum(const T& vec)
+    {
+        typename T::value_type sum{};
+
+        for (const auto& e : vec)
+        {
+            sum += e;
+        }
+
+        return sum;
+    }
+} // namespace Ver_1
+
+inline namespace Ver_2
+{
+    template <typename T>
+    auto sum(const T& vec) -> std::decay_t<decltype(*std::begin(vec))> // const int
+    {
+        using ValueType = std::decay_t<decltype(*std::begin(vec))>;
+
+        ValueType sum{};  // const int sum{};
+
+        for (const auto& e : vec)
+        {
+            sum += e;
+        }
+
+        return sum;
+    }
+} // namespace Ver_1
+
+TEST_CASE("type dependent names")
+{
+    auto v1 = A::foo(42);
+    auto v2 = A::bar(42);
+
+    type_dependent_name<A>();
+
+    std::list<int> vec = {1, 2, 3, 4};
+
+    int result = sum(vec);
+    CHECK(result == 10);
 }
