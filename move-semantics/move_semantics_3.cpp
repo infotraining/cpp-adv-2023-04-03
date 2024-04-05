@@ -189,6 +189,12 @@ struct Container
         items.push_back(std::forward<T>(item)); // copy     
     }
 
+    template <typename... TArgs>
+    void emplace_back(TArgs&&... args)
+    {
+        items.emplace_back(std::forward<TArgs>(args)...);
+    }
+
     // void push_back(const std::string& item)
     // {
     //     std::cout << "void push_back(const std::string& item: " << item << ")\n";

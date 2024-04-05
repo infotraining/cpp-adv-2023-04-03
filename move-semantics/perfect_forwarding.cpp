@@ -71,7 +71,7 @@ namespace PerfectForwarding
         //     have_fun(std::move(g))
         // }
 
-        have_fun(std::forward<TGadget>(g))
+        have_fun(std::forward<TGadget>(g));
     }
 
     namespace Cpp20

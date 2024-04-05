@@ -1,3 +1,4 @@
+#define ENABLE_MOVE_SEMANTICS
 #include "gadget.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -84,6 +85,31 @@ namespace Explain
     private:
         T* ptr_;
     };
+
+    // template <typename T>
+    // unique_ptr<T> make_unique()
+    // {
+    //     return unique_ptr<T>(new T());
+    // }
+
+    // template <typename T, typename TArg1>
+    // unique_ptr<T> make_unique(TArg1&& arg1)
+    // {
+    //     return unique_ptr<T>(new T(std::forward<TArg1>(arg1)));
+    // }
+
+    // template <typename T, typename TArg1, typename TArg2>
+    // unique_ptr<T> make_unique(TArg1&& arg1, TArg2&& arg2)
+    // {
+    //     return unique_ptr<T>(new T(std::forward<TArg1>(arg1), std::forward<TArg2>(arg2)));
+    // }
+
+    // variadic template
+    template <typename T, typename... TArgs>
+    unique_ptr<T> make_unique(TArgs&&... args)
+    {
+        return unique_ptr<T>(new T(std::forward<TArgs>(args)...));
+    }
 } // namespace Explain
 
 Explain::unique_ptr<Gadget> create_gadget()
@@ -91,7 +117,7 @@ Explain::unique_ptr<Gadget> create_gadget()
     static int id = 0;
 
     const int current_id = ++id;
-    return Explain::unique_ptr<Gadget>(new Gadget(current_id, "Gadget#"s + std::to_string(current_id)));
+    return Explain::make_unique<Gadget>(current_id, "Gadget#"s + std::to_string(current_id));
 }
 
 TEST_CASE("move semantics - unique_ptr")
@@ -128,14 +154,14 @@ TEST_CASE("move semantics - unique_ptr")
 
         SECTION("automatic clean-up")
         {
-            Explain::unique_ptr<Gadget> ptr_g(new Gadget(777, "smartwatch"));
+            Explain::unique_ptr<Gadget> ptr_g = Explain::make_unique<Gadget>(777, "smartwatch");
             ptr_g->use();
             (*ptr_g).use();
 
             Explain::unique_ptr<Gadget> other_ptr_g = std::move(ptr_g); // move-constructor
             other_ptr_g->use();
 
-            other_ptr_g = Explain::unique_ptr<Gadget>(new Gadget(888, "Gadget"));
+            other_ptr_g = Explain::make_unique<Gadget>(888);
             other_ptr_g->use();
 
             other_ptr_g = create_gadget();
@@ -158,4 +184,15 @@ TEST_CASE("move semantics - unique_ptr")
             }
         }
     }
+}
+
+TEST_CASE("perfect forwarding - emplace_???")
+{
+    std::vector<Gadget> gadgets;
+
+    gadgets.push_back(Gadget{665, "less-evil"});
+    gadgets.push_back(Gadget{42, "forty-two"});
+
+    gadgets.emplace_back(777, "ipad");
+    gadgets.emplace_back(779);
 }
