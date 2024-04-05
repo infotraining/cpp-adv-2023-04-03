@@ -54,7 +54,7 @@ namespace WithoutPerfectForwarding
 namespace PerfectForwarding
 {
     template <typename TGadget>
-    void use(TGadget&& g)
+    void use(TGadget&& g)  // g is universal reference
     {
         // //if g is passed as lvalue 
         // have_fun(g);
@@ -62,7 +62,16 @@ namespace PerfectForwarding
         // //if  g is passed as rvalue
         // have_fun(std::move(g));
 
-        have_fun(std::forward<TGadget>(g));
+        // if constexpr(std::is_lvalue_reference_v<TGadget>)
+        // {
+        //     have_fun(g);
+        // }
+        // else
+        // {
+        //     have_fun(std::move(g))
+        // }
+
+        have_fun(std::forward<TGadget>(g))
     }
 
     namespace Cpp20
@@ -134,4 +143,12 @@ TEST_CASE("reference collapsing")
 
     auto&& uref2 = 42;      // int&&
     static_assert(std::is_same<decltype(uref2), int&&>::value, "uref2 is not int&&");
+
+    std::vector vec = {1, 2, 3};
+    auto backup = std::forward<std::vector<int>&>(vec);  // vec
+    CHECK(vec == backup);
+
+    auto target = std::forward<std::vector<int>>(vec); // std::move(vec)
+    CHECK(target == std::vector{1, 2, 3});
+    CHECK(vec.size() == 0);
 }

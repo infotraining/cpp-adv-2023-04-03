@@ -182,17 +182,24 @@ struct Container
         std::copy(lst.begin(), lst.end(), items.begin());
     }
 
-    void push_back(const std::string& item)
+    template <typename T>
+    void push_back(T&& item)
     {
-        std::cout << "void push_back(const std::string& item: " << item << ")\n";
-        items.push_back(item); // copy
+        std::cout << "void forward::push_back(item): " << item << ")\n";
+        items.push_back(std::forward<T>(item)); // copy     
     }
 
-    void push_back(std::string&& item)  // item is lvalue of type: reference to r-value
-    {
-        std::cout << "void push_back(std::string&& item: " << item << ")\n";
-        items.push_back(std::move(item)); // copy
-    }
+    // void push_back(const std::string& item)
+    // {
+    //     std::cout << "void push_back(const std::string& item: " << item << ")\n";
+    //     items.push_back(item); // copy
+    // }
+
+    // void push_back(std::string&& item)  // item is lvalue of type: reference to r-value
+    // {
+    //     std::cout << "void push_back(std::string&& item: " << item << ")\n";
+    //     items.push_back(std::move(item)); // copy
+    // }
 
     void push_back_by_value(std::string item)
     {
@@ -215,7 +222,7 @@ TEST_CASE("container")
     SECTION("push_back")
     {
         Container container = {"one"s, "two"s, "three"s};
-        container.push_back("text");
+        container.push_back("text");  // "text" - c-string literal is lvalue!!!
         container.push_back(std::string("text"));
         container.push_back("text"s);
 
