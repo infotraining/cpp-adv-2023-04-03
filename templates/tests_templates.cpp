@@ -572,3 +572,29 @@ TEST_CASE("type dependent names")
     int result = sum(vec);
     CHECK(result == 10);
 }
+
+namespace Lib
+{
+    namespace ver_1
+    {
+        int foo()
+        {
+            return 1;
+        }
+    }
+
+    inline namespace ver_2
+    {
+        int foo()
+        {
+            return 2;
+        }
+    }
+}
+
+TEST_CASE("inline namespace")
+{
+    CHECK(Lib::foo() == 2);
+    CHECK(Lib::ver_1::foo() == 1);
+    CHECK(Lib::ver_2::foo() == 1);
+}
